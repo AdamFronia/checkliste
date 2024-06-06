@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(const MyApp());
@@ -10,10 +11,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'checkliste',
+      title: 'Checkliste',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color.fromARGB(255, 53, 8, 253)),
+            seedColor: const Color.fromARGB(255, 216, 253, 8)),
         useMaterial3: true,
       ),
       home: const MyHomePage(title: 'Checkliste'),
@@ -34,11 +35,30 @@ class _MyHomePageState extends State<MyHomePage> {
   final List<String> _items = [];
   final TextEditingController _controller = TextEditingController();
 
+  @override
+  void initState() {
+    super.initState();
+    _loadItems();
+  }
+
+  Future<void> _loadItems() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _items.addAll(prefs.getStringList('items') ?? []);
+    });
+  }
+
+  Future<void> _saveItems() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('items', _items);
+  }
+
   void _addItem() {
     setState(() {
       if (_controller.text.isNotEmpty) {
         _items.add(_controller.text);
         _controller.clear();
+        _saveItems();
       }
     });
   }
@@ -46,6 +66,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void _removeItem(int index) {
     setState(() {
       _items.removeAt(index);
+      _saveItems();
     });
   }
 
